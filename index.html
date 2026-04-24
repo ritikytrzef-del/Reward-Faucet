@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Reward Faucet</title>
+    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
+    <script src="https://ad.gigapub.tech/script?id=51"></script>
+    <script src='//libtl.com/sdk.js' data-zone='105454' data-sdk='show_105454'></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+        --bg: #060b14;
+        --surface: #0d1421;
+        --surface2: #111b2e;
+        --border: rgba(255,255,255,0.07);
+        --border-bright: rgba(42,171,238,0.3);
+        --tg: #2AABEE;
+        --tg-dark: #1a8fc7;
+        --gold: #f5c842;
+        --gold-dark: #d4a017;
+        --green: #22d3a0;
+        --red: #f25f5c;
+        --text: #e8f0fe;
+        --text-muted: #5a7296;
+        --text-dim: #8fa3bf;
+        --card-grad: linear-gradient(145deg, #0d1f3a 0%, #091628 60%, #061020 100%);
+        --accent-grad: linear-gradient(135deg, #2AABEE 0%, #1565c0 100%);
+        --gold-grad: linear-gradient(135deg, #f5c842 0%, #f09819 100%);
+        --green-grad: linear-gradient(135deg, #22d3a0 0%, #059669 100%);
+        --glow-tg: 0 0 20px rgba(42,171,238,0.25);
+        --glow-gold: 0 0 20px rgba(245,200,66,0.2);
+        --radius: 20px;
+        --radius-sm: 12px;
+    }
+
+    html { background: var(--bg); }
+    body {
+        font-family: 'Sora', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 0 14px 130px;
+        overflow-x: hidden;
+    }
+
+    /* ── BG GRID ── */
+    body::before {
+        content: '';
+        position: fixed; inset: 0; z-index: 0;
+        background-image:
+            linear-gradient(rgba(42,171,238,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(42,171,238,0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+    }
+    body::after {
+        content: '';
+        position: fixed; top: -200px; left: -100px; z-index: 0;
+        width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(42,171,238,0.06) 0%, transparent 70%);
+        pointer-events: none;
+        animation: driftBg 12s ease-in-out infinite alternate;
+    }
+    @keyframes driftBg { from{transform:translate(0,0)} to{transform:translate(80px,60px)} }
+
+    .container { max-width: 500px; margin: 0 auto; position: relative; z-index: 1; }
+
+    /* ── HEADER ── */
+    .header {
+        padding: 28px 0 18px;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .header-left {}
+    .app-title {
+        font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+        background: linear-gradient(90deg, #fff 0%, #8ab4d8 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .user-greeting {
+        font-size: 12px; color: var(--text-muted); margin-top: 3px; font-weight: 400;
+        display: flex; align-items: center; gap: 5px;
+    }
+    .online-dot {
+        width: 6px; height: 6px; background: var(--green);
+        border-radius: 50%; animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .verified-badge {
+        display: flex; align-items: center; gap: 6px;
+        background: rgba(42,171,238,0.08);
+        border: 1px solid rgba(42,171,238,0.2);
+        padding: 6px 12px; border-radius: 50px;
+        font-size: 10px; font-weight: 700; color: var(--tg);
+        letter-spacing: 0.5px;
+    }
+
+    /* ── MAIN BALANCE CARD ── */
+    .balance-card {
+        background: var(--card-grad);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 26px 24px 22px;
+        margin: 0 0 16px;
+        position: relative; overflow: hidden;
+        box-shadow: 0 24px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .balance-card::before {
+        content: ''; position: absolute;
+        top: -80px; right: -80px;
+        width: 220px; height: 220px;
+        background: radial-gradient(circle, rgba(42,171,238,0.12), transparent 70%);
+        pointer-events: none;
+    }
+    .balance-card::after {
+        content: ''; position: absolute;
+        bottom: -60px; left: -40px;
+        width: 160px; height: 160px;
+        background: radial-gradient(circle, rgba(21,101,192,0.1), transparent 70%);
+        pointer-events: none;
+    }
+    .bal-label {
+        font-size: 10px; font-weight: 700; letter-spacing: 2px;
+        color: var(--text-muted); text-transform: uppercase;
+        display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+    }
+    .bal-label::before {
+        content: ''; width: 16px; height: 1px; background: var(--text-muted);
+    }
+    .bal-usdt {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 34px; font-weight: 700; letter-spacing: -1px;
+        color: #fff; line-height: 1;
+        display: flex; align-items: baseline; gap: 8px;
+    }
+    .bal-unit { font-size: 14px; color: var(--tg); font-weight: 700; }
+    .bal-inr-row {
+        margin-top: 12px; display: flex; align-items: center;
+        justify-content: space-between;
+    }
+    .bal-inr {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px; color: var(--text-dim);
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border);
+        padding: 5px 12px; border-radius: 8px;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .card-tg-watermark {
+        font-size: 48px; color: rgba(42,171,238,0.06);
+        position: absolute; bottom: 12px; right: 18px;
+        pointer-events: none;
+    }
+    .mini-stats-row {
+        display: flex; gap: 8px; margin-top: 16px;
+    }
+    .mini-stat {
+        flex: 1; background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border);
+        border-radius: 12px; padding: 10px 12px; text-align: center;
+    }
+    .mini-stat-val {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 16px; font-weight: 700; color: var(--tg);
+    }
+    .mini-stat-lbl { font-size: 9px; color: var(--text-muted); margin-top: 3px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+    /* ── PROGRESS CARD ── */
+    .progress-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        margin-bottom: 12px;
+    }
+    .progress-header {
+        display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+    }
+    .progress-title { font-size: 12px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.5px; }
+    .progress-pct {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px; font-weight: 700; color: var(--tg);
+        background: rgba(42,171,238,0.1); border: 1px solid rgba(42,171,238,0.2);
+        padding: 2px 10px; border-radius: 50px;
+    }
+    .progress-track {
+        height: 8px; background: rgba(255,255,255,0.06);
+        border-radius: 50px; overflow: hidden; position: relative;
+    }
+    .progress-fill {
+        height: 100%; width: 0%; border-radius: 50px;
+        background: linear-gradient(90deg, #2AABEE, #22d3a0);
+        transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+        position: relative;
+    }
+    .progress-fill::after {
+        content: ''; position: absolute; right: 0; top: 0; bottom: 0;
+        width: 20px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4));
+        border-radius: 50px;
+    }
+    .limit-chips { display: flex; gap: 8px; margin-top: 12px; }
+    .chip {
+        flex: 1; background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border);
+        border-radius: 10px; padding: 8px 10px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text-dim); font-weight: 600;
+    }
+    .chip i { font-size: 11px; color: var(--tg); }
+    .chip span { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text); }
+
+    /* ── INFO TILES ── */
+    .info-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .info-tile {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 14px 16px;
+        display: flex; align-items: center; gap: 12px;
+    }
+    .tile-icon {
+        width: 36px; height: 36px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 15px; flex-shrink: 0;
+    }
+    .tile-icon.blue { background: rgba(42,171,238,0.12); color: var(--tg); }
+    .tile-icon.gold { background: rgba(245,200,66,0.12); color: var(--gold); }
+    .tile-icon.green { background: rgba(34,211,160,0.12); color: var(--green); }
+    .tile-icon.red { background: rgba(242,95,92,0.12); color: var(--red); }
+    .tile-val { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 700; color: var(--text); }
+    .tile-lbl { font-size: 10px; color: var(--text-muted); margin-top: 1px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── BRANDING ── */
+    .branding-bar {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 13px 18px;
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 4px;
+    }
+    .branding-left { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+    .branding-text {
+        font-weight: 800; font-size: 13px;
+        background: linear-gradient(90deg, #2AABEE, #22d3a0, #f5c842, #2AABEE);
+        background-size: 300% 100%;
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        animation: shimmer 4s linear infinite;
+    }
+    @keyframes shimmer { from{background-position:0%} to{background-position:300%} }
+    .branding-shield { font-size: 18px; color: var(--tg); opacity: 0.6; }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+        font-size: 11px; font-weight: 700; letter-spacing: 2px;
+        color: var(--text-muted); text-transform: uppercase;
+        margin: 20px 0 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ── AD CARDS ── */
+    .ads-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    
+    .ad-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 14px;
+        text-align: center;
+        transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+        position: relative; overflow: hidden;
+    }
+    .ad-card:hover { transform: translateY(-2px); border-color: rgba(42,171,238,0.3); box-shadow: var(--glow-tg); }
+
+    .ad-card-premium {
+        grid-column: span 2;
+        background: linear-gradient(145deg, #1a1200, #0d0a00, #0a0800);
+        border: 1px solid rgba(245,200,66,0.25);
+    }
+    .ad-card-premium:hover { border-color: rgba(245,200,66,0.5); box-shadow: var(--glow-gold); }
+
+    .ad-card-badge {
+        position: absolute; top: 10px; right: 10px;
+        font-size: 9px; font-weight: 700; letter-spacing: 1px;
+        padding: 3px 8px; border-radius: 50px;
+    }
+    .badge-premium { background: rgba(245,200,66,0.15); color: var(--gold); border: 1px solid rgba(245,200,66,0.3); }
+    .badge-normal { background: rgba(42,171,238,0.1); color: var(--tg); border: 1px solid rgba(42,171,238,0.2); }
+
+    .ad-icon-wrap {
+        width: 48px; height: 48px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 12px; font-size: 20px;
+    }
+    .icon-gold { background: rgba(245,200,66,0.1); color: var(--gold); border: 1px solid rgba(245,200,66,0.2); }
+    .icon-blue { background: rgba(42,171,238,0.1); color: var(--tg); border: 1px solid rgba(42,171,238,0.2); }
+
+    .ad-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .ad-reward {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 15px; font-weight: 700;
+        color: var(--green); margin-bottom: 3px;
+    }
+    .ad-limit { font-size: 10px; color: var(--text-muted); margin-bottom: 14px; }
+
+    .btn-ad {
+        width: 100%; border: none; padding: 11px;
+        border-radius: 12px; font-size: 12px; font-weight: 700;
+        cursor: pointer; font-family: 'Sora', sans-serif;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-ad:active { transform: scale(0.97); opacity: 0.85; }
+    .btn-blue { background: var(--accent-grad); color: white; }
+    .btn-gold { background: var(--gold-grad); color: #3a2000; }
+
+    /* ── EARN MORE ── */
+    .earn-more-header {
+        background: linear-gradient(135deg, rgba(42,171,238,0.07), rgba(21,101,192,0.05));
+        border: 1px solid rgba(42,171,238,0.15);
+        border-radius: var(--radius-sm); padding: 13px 16px;
+        display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .em-icon {
+        width: 32px; height: 32px; background: var(--tg);
+        border-radius: 9px; display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 14px; flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(42,171,238,0.35);
+    }
+    .em-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .em-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+    .bot-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 14px 16px; margin-bottom: 8px;
+        display: flex; align-items: center; gap: 13px;
+        text-decoration: none; color: inherit;
+        transition: all 0.2s; cursor: pointer;
+        position: relative; overflow: hidden;
+    }
+    .bot-card::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+        width: 3px; background: var(--tg); border-radius: 0 2px 2px 0;
+        opacity: 0; transition: opacity 0.2s;
+    }
+    .bot-card:hover { border-color: rgba(42,171,238,0.25); background: var(--surface2); transform: translateX(3px); }
+    .bot-card:hover::before { opacity: 1; }
+    .bot-tg-icon {
+        width: 42px; height: 42px;
+        background: linear-gradient(135deg, #2AABEE, #1565c0);
+        border-radius: 13px; display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 18px; flex-shrink: 0;
+        box-shadow: 0 6px 16px rgba(42,171,238,0.25);
+    }
+    .bot-info { flex: 1; }
+    .bot-name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .bot-handle { font-size: 10px; color: var(--tg); margin-top: 2px; font-weight: 600; }
+    .bot-earn-tag {
+        font-size: 9px; font-weight: 800; letter-spacing: 1px;
+        background: rgba(34,211,160,0.1); color: var(--green);
+        border: 1px solid rgba(34,211,160,0.2);
+        padding: 4px 10px; border-radius: 50px;
+        display: flex; align-items: center; gap: 4px; white-space: nowrap;
+    }
+
+    /* ── WALLET ── */
+    .wallet-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 16px 18px; margin-bottom: 10px;
+        cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+        transition: all 0.2s; position: relative; overflow: hidden;
+    }
+    .wallet-card:hover { border-color: rgba(42,171,238,0.3); background: var(--surface2); }
+    .wallet-card.active { border-color: var(--tg); background: rgba(42,171,238,0.05); box-shadow: var(--glow-tg); }
+    .wallet-card.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--tg); }
+    .wallet-info-col {}
+    .wallet-name { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; }
+    .wallet-min { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+    .wallet-icon-wrap {
+        width: 40px; height: 40px; border-radius: 11px;
+        display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+
+    .withdraw-form {
+        display: none; margin-top: 14px;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 20px;
+    }
+    .req-note { color: #f5c842; font-size: 11px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .form-input {
+        width: 100%; padding: 14px 16px; border-radius: 12px;
+        border: 1px solid var(--border); background: var(--surface2);
+        color: var(--text); font-family: 'Sora', sans-serif; font-size: 13px;
+        margin-bottom: 10px; outline: none; transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: rgba(42,171,238,0.4); }
+    .form-input::placeholder { color: var(--text-muted); }
+    .btn-submit {
+        width: 100%; padding: 16px; background: var(--accent-grad);
+        color: white; border: none; border-radius: 14px;
+        font-weight: 800; font-size: 14px; font-family: 'Sora', sans-serif;
+        cursor: pointer; letter-spacing: 0.5px;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        transition: opacity 0.2s, transform 0.1s;
+        box-shadow: 0 8px 24px rgba(42,171,238,0.25);
+    }
+    .btn-submit:active { transform: scale(0.98); opacity: 0.9; }
+
+    /* ── HISTORY ── */
+    .history-item {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 8px;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .history-left { display: flex; align-items: center; gap: 12px; }
+    .history-icon {
+        width: 38px; height: 38px; border-radius: 11px;
+        background: rgba(42,171,238,0.08); border: 1px solid rgba(42,171,238,0.15);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--tg); font-size: 16px; flex-shrink: 0;
+    }
+    .history-amount { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: var(--text); }
+    .history-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .status-badge {
+        font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
+        padding: 5px 12px; border-radius: 50px;
+    }
+    .status-success { background: rgba(34,211,160,0.1); color: var(--green); border: 1px solid rgba(34,211,160,0.2); }
+    .status-pending { background: rgba(245,200,66,0.1); color: var(--gold); border: 1px solid rgba(245,200,66,0.2); }
+
+    /* ── BOTTOM NAV ── */
+    .nav-fixed {
+        position: fixed; bottom: 16px; left: 14px; right: 14px;
+        background: rgba(13,20,33,0.92); backdrop-filter: blur(20px);
+        border: 1px solid var(--border);
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        padding: 10px 6px; border-radius: 22px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        max-width: 472px; margin: 0 auto; z-index: 999;
+    }
+    .nav-btn {
+        background: none; border: none; color: var(--text-muted);
+        font-size: 10px; font-weight: 600; text-align: center;
+        padding: 6px 4px; cursor: pointer; font-family: 'Sora', sans-serif;
+        border-radius: 12px; transition: all 0.2s;
+        display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .nav-btn i { font-size: 16px; }
+    .nav-btn.active { color: var(--tg); background: rgba(42,171,238,0.1); }
+    .nav-btn.active i { filter: drop-shadow(0 0 6px rgba(42,171,238,0.5)); }
+
+    /* ── VIEWS ── */
+    .view { display: none; }
+    .view.active { display: block; animation: fadeUp 0.35s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── OVERLAY ── */
+    #overlay {
+        position: fixed; inset: 0; z-index: 10000;
+        background: rgba(6,11,20,0.92); backdrop-filter: blur(8px);
+        display: none; justify-content: center; align-items: center; flex-direction: column; gap: 16px;
+    }
+    .loader-ring {
+        width: 50px; height: 50px; border-radius: 50%;
+        border: 3px solid rgba(42,171,238,0.2);
+        border-top-color: var(--tg);
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .loader-text { font-size: 13px; font-weight: 700; color: var(--text-muted); letter-spacing: 2px; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align: center; padding: 50px 20px; }
+    .empty-state i { font-size: 40px; color: var(--text-muted); opacity: 0.4; margin-bottom: 12px; display: block; }
+    .empty-state p { color: var(--text-muted); font-size: 13px; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div id="overlay">
+    <div class="loader-ring"></div>
+    <div class="loader-text">LOADING AD...</div>
+</div>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-left">
+            <div class="app-title">Reward Faucet</div>
+            <div class="user-greeting">
+                <span class="online-dot"></span>
+                <span id="greeting-user">Welcome back</span>
+            </div>
+        </div>
+        <div class="verified-badge">
+            <i class="fa-brands fa-telegram"></i> VERIFIED
+        </div>
+    </div>
+
+    <!-- HOME VIEW -->
+    <div id="home-view" class="view active">
+
+        <!-- Balance Card -->
+        <div class="balance-card">
+            <div class="bal-label">Total Earnings</div>
+            <div class="bal-usdt">
+                <span id="display-usdt">0.0000</span>
+                <span class="bal-unit">USDT</span>
+            </div>
+            <div class="bal-inr-row">
+                <div class="bal-inr">
+                    <i class="fa-solid fa-indian-rupee-sign" style="font-size:11px;color:var(--tg);"></i>
+                    <span id="display-inr">0.00 INR</span>
+                </div>
+                <div style="font-size:10px;color:var(--text-muted);font-weight:600;">1$ = ₹88</div>
+            </div>
+            <div class="mini-stats-row">
+                <div class="mini-stat">
+                    <div class="mini-stat-val" id="ms-today">0</div>
+                    <div class="mini-stat-lbl">Today</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-val" id="ms-hour">0</div>
+                    <div class="mini-stat-lbl">This Hour</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-val" id="ms-total">0</div>
+                    <div class="mini-stat-lbl">All Time</div>
+                </div>
+            </div>
+            <i class="fa-brands fa-telegram card-tg-watermark"></i>
+        </div>
+
+        <!-- Progress Card -->
+        <div class="progress-card">
+            <div class="progress-header">
+                <div class="progress-title">Daily Ad Progress</div>
+                <div class="progress-pct" id="goal-percent">0%</div>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="goal-bar"></div>
+            </div>
+            <div class="limit-chips">
+                <div class="chip">
+                    <i class="fa-solid fa-crown"></i>
+                    <div>Premium <span id="chip-premium">0/5</span></div>
+                </div>
+                <div class="chip">
+                    <i class="fa-brands fa-telegram"></i>
+                    <div>Normal <span id="chip-normal">0/5</span></div>
+                </div>
+                <div class="chip">
+                    <i class="fa-solid fa-clock"></i>
+                    <div>Hourly <span id="chip-hour">0/10</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Tiles -->
+        <div class="info-tiles">
+            <div class="info-tile">
+                <div class="tile-icon blue"><i class="fa-solid fa-bolt"></i></div>
+                <div>
+                    <div class="tile-val" id="tile-earning">$0.0001</div>
+                    <div class="tile-lbl">Per Ad</div>
+                </div>
+            </div>
+            <div class="info-tile">
+                <div class="tile-icon gold"><i class="fa-solid fa-star"></i></div>
+                <div>
+                    <div class="tile-val">$0.0002</div>
+                    <div class="tile-lbl">Premium Ad</div>
+                </div>
+            </div>
+            <div class="info-tile">
+                <div class="tile-icon green"><i class="fa-solid fa-calendar-day"></i></div>
+                <div>
+                    <div class="tile-val">10 Ads</div>
+                    <div class="tile-lbl">Daily Limit</div>
+                </div>
+            </div>
+            <div class="info-tile">
+                <div class="tile-icon red"><i class="fa-solid fa-fire"></i></div>
+                <div>
+                    <div class="tile-val" id="tile-max">$0.002</div>
+                    <div class="tile-lbl">Max / Day</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branding -->
+        <div class="branding-bar">
+            <div class="branding-left">
+                Secured by<br>
+                <span class="branding-text">Reward Software</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="text-align:right;">
+                    <div style="font-size:9px;color:var(--text-muted);letter-spacing:1px;">SYSTEM STATUS</div>
+                    <div style="font-size:11px;color:var(--green);font-weight:700;display:flex;align-items:center;gap:4px;"><span class="online-dot"></span> ONLINE</div>
+                </div>
+                <i class="fa-solid fa-shield-halved branding-shield"></i>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ADS VIEW -->
+    <div id="ads-view" class="view">
+        <div class="section-title">Watch & Earn</div>
+        <div class="ads-grid" id="slots-container"></div>
+
+        <div class="section-title" style="margin-top:24px;">Earn More Bots</div>
+        <div class="earn-more-header">
+            <div class="em-icon"><i class="fa-brands fa-telegram"></i></div>
+            <div>
+                <div class="em-title">Join Our Partner Bots</div>
+                <div class="em-sub">Multiply your earnings across all platforms</div>
+            </div>
+        </div>
+
+        <a href="https://t.me/Adsgptpro_bot" target="_blank" class="bot-card">
+            <div class="bot-tg-icon"><i class="fa-brands fa-telegram"></i></div>
+            <div class="bot-info">
+                <div class="bot-name">AdsGPT Pro Bot</div>
+                <div class="bot-handle">@Adsgptpro_bot</div>
+            </div>
+            <div class="bot-earn-tag"><i class="fa-solid fa-circle-plus"></i> EARN</div>
+        </a>
+        <a href="https://t.me/Adsrewardpro_bot" target="_blank" class="bot-card">
+            <div class="bot-tg-icon"><i class="fa-brands fa-telegram"></i></div>
+            <div class="bot-info">
+                <div class="bot-name">Ads Reward Pro</div>
+                <div class="bot-handle">@Adsrewardpro_bot</div>
+            </div>
+            <div class="bot-earn-tag"><i class="fa-solid fa-circle-plus"></i> EARN</div>
+        </a>
+        <a href="https://t.me/Rewardcoin_bot" target="_blank" class="bot-card">
+            <div class="bot-tg-icon"><i class="fa-brands fa-telegram"></i></div>
+            <div class="bot-info">
+                <div class="bot-name">Reward Coin Bot</div>
+                <div class="bot-handle">@Rewardcoin_bot</div>
+            </div>
+            <div class="bot-earn-tag"><i class="fa-solid fa-circle-plus"></i> EARN</div>
+        </a>
+        <a href="https://t.me/EarningAdventure_bot" target="_blank" class="bot-card">
+            <div class="bot-tg-icon"><i class="fa-brands fa-telegram"></i></div>
+            <div class="bot-info">
+                <div class="bot-name">Earning Adventure</div>
+                <div class="bot-handle">@EarningAdventure_bot</div>
+            </div>
+            <div class="bot-earn-tag"><i class="fa-solid fa-circle-plus"></i> EARN</div>
+        </a>
+        <a href="https://t.me/Rewardsoftware_bot" target="_blank" class="bot-card">
+            <div class="bot-tg-icon"><i class="fa-brands fa-telegram"></i></div>
+            <div class="bot-info">
+                <div class="bot-name">Reward Software Bot</div>
+                <div class="bot-handle">@Rewardsoftware_bot</div>
+            </div>
+            <div class="bot-earn-tag"><i class="fa-solid fa-circle-plus"></i> EARN</div>
+        </a>
+    </div>
+
+    <!-- WALLET VIEW -->
+    <div id="wallet-view" class="view">
+        <div class="section-title">Withdraw Methods</div>
+
+        <div class="wallet-card" onclick="selectWay('Faucetpay',0.05,'USDT','Enter your Faucetpay Email',10,0.05)">
+            <div class="wallet-info-col">
+                <div class="wallet-name"><i class="fa-solid fa-faucet" style="color:var(--tg);font-size:14px;"></i> Faucetpay</div>
+                <div class="wallet-min">Min: $0.05 · Instant · No Fee</div>
+            </div>
+            <div class="wallet-icon-wrap" style="background:rgba(42,171,238,0.08);color:var(--tg);">
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+        </div>
+
+        <div class="wallet-card" onclick="selectWay('USDT TON',0.05,'USDT','Enter TON Wallet Address',10,100)">
+            <div class="wallet-info-col">
+                <div class="wallet-name">
+                    <i class="fa-brands fa-telegram" style="color:var(--tg);font-size:14px;"></i> USDT via TON
+                </div>
+                <div class="wallet-min">Min: $0.05 · TON Network · Low Fee</div>
+            </div>
+            <div class="wallet-icon-wrap" style="background:rgba(42,171,238,0.08);color:var(--tg);">
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+        </div>
+
+        <div class="wallet-card" onclick="selectWay('Google Play',0.05,'INR','Enter your Google Account Email',10,100)">
+            <div class="wallet-info-col">
+                <div class="wallet-name"><i class="fa-brands fa-google-play" style="color:#eab308;font-size:14px;"></i> Google Play Gift</div>
+                <div class="wallet-min">Min: ₹4.40 · Sent via Email · INR</div>
+            </div>
+            <div class="wallet-icon-wrap" style="background:rgba(234,179,8,0.08);color:#eab308;">
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+        </div>
+
+        <div class="withdraw-form" id="withdraw-form">
+            <div class="req-note" id="req-note"></div>
+            <input type="text" id="p-info" class="form-input" placeholder="Enter details">
+            <input type="number" id="p-amt" step="0.0001" class="form-input" placeholder="Amount">
+            <button class="btn-submit" onclick="submitRequest()">
+                <i class="fa-brands fa-telegram"></i> SUBMIT REQUEST
+            </button>
+        </div>
+    </div>
+
+    <!-- HISTORY VIEW -->
+    <div id="history-view" class="view">
+        <div class="section-title">Transaction History</div>
+        <div id="history-list"></div>
+    </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="nav-fixed">
+    <button class="nav-btn active" onclick="switchTab('home',this)">
+        <i class="fa-solid fa-house"></i> Home
+    </button>
+    <button class="nav-btn" onclick="switchTab('ads',this)">
+        <i class="fa-solid fa-play-circle"></i> Ads
+    </button>
+    <button class="nav-btn" onclick="switchTab('wallet',this)">
+        <i class="fa-solid fa-wallet"></i> Wallet
+    </button>
+    <button class="nav-btn" onclick="switchTab('history',this)">
+        <i class="fa-solid fa-clock-rotate-left"></i> History
+    </button>
+</div>
+
+<script>
+    // Init Ads SDKs
+    const richadsController = new window.TelegramAdsController();
+    richadsController.initialize({ pubId:"996627", appId:"581", debug:false });
+    if(typeof show_105455==='function') {
+        show_105455({ type:'inApp', inAppSettings:{ frequency:2, capping:0.1, interval:30, timeout:5, everyPage:false }});
+    }
+
+    const CONFIG = {
+        BOT_TOKEN:'8594617762:AAFbRgpG5iRyE7LLNi33JnXpReIHZ1CuIUs',
+        ADMIN_ID:'8594617762',
+        PREMIUM_AD_VAL:0.0002,
+        NORMAL_AD_VAL:0.0001,
+        INR_RATE:88,
+        DAILY_PREMIUM_LIMIT:5,
+        DAILY_NORMAL_LIMIT:5,
+        HOURLY_LIMIT:10
+    };
+
+    let db = JSON.parse(localStorage.getItem('reward_faucet_v2')) || {
+        balance:0, totalAds:0, todayPremium:0, todayNormal:0, hourAds:0,
+        lastHourTime:Date.now(), date:new Date().toLocaleDateString(), history:[]
+    };
+
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+
+    function updateUI() {
+        const today = new Date().toLocaleDateString();
+        if(db.date !== today) { db.todayPremium=0; db.todayNormal=0; db.date=today; }
+        if(Date.now()-db.lastHourTime > 3600000) { db.hourAds=0; db.lastHourTime=Date.now(); }
+
+        document.getElementById('display-usdt').innerText = db.balance.toFixed(4);
+        document.getElementById('display-inr').innerText = (db.balance*CONFIG.INR_RATE).toFixed(2)+' INR';
+
+        const totalToday = db.todayPremium+db.todayNormal;
+        const maxDaily = CONFIG.DAILY_PREMIUM_LIMIT+CONFIG.DAILY_NORMAL_LIMIT;
+
+        // Home stats
+        document.getElementById('ms-today').innerText = totalToday;
+        document.getElementById('ms-hour').innerText = db.hourAds;
+        document.getElementById('ms-total').innerText = db.totalAds;
+
+        // Progress
+        const pct = (totalToday/maxDaily)*100;
+        document.getElementById('goal-bar').style.width = pct+'%';
+        document.getElementById('goal-percent').innerText = Math.round(pct)+'%';
+
+        // Chips
+        document.getElementById('chip-premium').innerText = db.todayPremium+'/'+CONFIG.DAILY_PREMIUM_LIMIT;
+        document.getElementById('chip-normal').innerText = db.todayNormal+'/'+CONFIG.DAILY_NORMAL_LIMIT;
+        document.getElementById('chip-hour').innerText = db.hourAds+'/'+CONFIG.HOURLY_LIMIT;
+
+        localStorage.setItem('reward_faucet_v2', JSON.stringify(db));
+    }
+
+    function loadAds() {
+        const c = document.getElementById('slots-container');
+        c.innerHTML = `
+        <div class="ad-card ad-card-premium">
+            <span class="ad-card-badge badge-premium">PREMIUM</span>
+            <div class="ad-icon-wrap icon-gold"><i class="fa-solid fa-crown"></i></div>
+            <div class="ad-title">Premium Task</div>
+            <div class="ad-reward">+$${CONFIG.PREMIUM_AD_VAL}</div>
+            <div class="ad-limit">${db.todayPremium}/${CONFIG.DAILY_PREMIUM_LIMIT} used today</div>
+            <button class="btn-ad btn-gold" onclick="runRichAds()">
+                <i class="fa-brands fa-telegram"></i> Start Task
+            </button>
+        </div>
+        <div class="ad-card">
+            <span class="ad-card-badge badge-normal">ADS</span>
+            <div class="ad-icon-wrap icon-blue"><i class="fa-brands fa-telegram"></i></div>
+            <div class="ad-title">Ad Task 1</div>
+            <div class="ad-reward">+$${CONFIG.NORMAL_AD_VAL}</div>
+            <div class="ad-limit">${db.todayNormal}/${CONFIG.DAILY_NORMAL_LIMIT} used</div>
+            <button class="btn-ad btn-blue" onclick="runAd()">
+                <i class="fa-brands fa-telegram"></i> Watch
+            </button>
+        </div>
+        <div class="ad-card">
+            <span class="ad-card-badge badge-normal">ADS</span>
+            <div class="ad-icon-wrap icon-blue"><i class="fa-brands fa-telegram"></i></div>
+            <div class="ad-title">Ad Task 2</div>
+            <div class="ad-reward">+$${CONFIG.NORMAL_AD_VAL}</div>
+            <div class="ad-limit">${db.todayNormal}/${CONFIG.DAILY_NORMAL_LIMIT} used</div>
+            <button class="btn-ad btn-blue" onclick="runAd()">
+                <i class="fa-brands fa-telegram"></i> Watch
+            </button>
+        </div>`;
+    }
+
+    function showOverlay(show) {
+        document.getElementById('overlay').style.display = show ? 'flex' : 'none';
+    }
+
+    function runRichAds() {
+        if(db.todayPremium>=CONFIG.DAILY_PREMIUM_LIMIT) return alert("Daily premium limit (5) reached!");
+        showOverlay(true);
+        richadsController.triggerInterstitialVideo()
+            .then(()=>{ processReward('premium'); alert('✅ +$'+CONFIG.PREMIUM_AD_VAL+' USDT Added!'); })
+            .catch(()=>alert("Task unavailable. Try again."))
+            .finally(()=>showOverlay(false));
+    }
+
+    function runAd() {
+        if(db.todayNormal>=CONFIG.DAILY_NORMAL_LIMIT) return alert("Daily normal limit (5) reached!");
+        if(db.hourAds>=CONFIG.HOURLY_LIMIT) return alert("Hourly limit reached. Try later!");
+        showOverlay(true);
+        window.showGiga()
+            .then(()=>{ processReward('normal'); alert('✅ +$'+CONFIG.NORMAL_AD_VAL+' USDT Added!'); })
+            .catch(()=>alert("Ad not available."))
+            .finally(()=>showOverlay(false));
+    }
+
+    function processReward(type) {
+        if(type==='premium'){ db.balance+=CONFIG.PREMIUM_AD_VAL; db.todayPremium++; }
+        else { db.balance+=CONFIG.NORMAL_AD_VAL; db.todayNormal++; }
+        db.hourAds++; db.totalAds++;
+        updateUI();
+        if(document.getElementById('ads-view').classList.contains('active')) loadAds();
+    }
+
+    let selected = null;
+    function selectWay(m,min,cur,p,reqAds,max) {
+        selected = {m,min,cur,reqAds,max};
+        document.querySelectorAll('.wallet-card').forEach(c=>c.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        const form = document.getElementById('withdraw-form');
+        form.style.display = 'block';
+        document.getElementById('p-info').placeholder = p;
+        const minDisp = (cur==='INR') ? (min*CONFIG.INR_RATE).toFixed(2) : min;
+        document.getElementById('p-amt').placeholder = `Amount in ${cur} (Min: ${minDisp})`;
+        const note = document.getElementById('req-note');
+        if(reqAds>0){
+            note.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Minimum ${reqAds} ads required to withdraw`;
+            note.style.display = 'flex';
+        } else { note.style.display = 'none'; }
+    }
+
+    function submitRequest() {
+        const info = document.getElementById('p-info').value.trim();
+        const amt = parseFloat(document.getElementById('p-amt').value);
+        if(!info||!amt||!selected) return alert("Please fill in all fields.");
+        if(db.totalAds<selected.reqAds) return alert(`Watch ${selected.reqAds} ads first to unlock withdrawals.`);
+        const userBal = (selected.cur==='INR') ? (db.balance*CONFIG.INR_RATE) : db.balance;
+        const minReq = selected.min*(selected.cur==='INR'?CONFIG.INR_RATE:1);
+        if(amt<minReq) return alert(`Minimum: ${minReq.toFixed(4)} ${selected.cur}`);
+        if(amt>userBal) return alert("Insufficient balance.");
+
+        db.balance -= (selected.cur==='INR' ? amt/CONFIG.INR_RATE : amt);
+        fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`,{
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                chat_id: CONFIG.ADMIN_ID,
+                text: `💸 *Payout Request*\n\nAmount: \`${amt} ${selected.cur}\`\nMethod: ${selected.m}\nDetails: ${info}\nUser: ${tg.initDataUnsafe.user?tg.initDataUnsafe.user.id:'N/A'}\nTotal Ads: ${db.totalAds}`,
+                parse_mode:'Markdown'
+            })
+        });
+        db.history.push({ date:new Date().toLocaleDateString(), amount:amt, currency:selected.cur, method:selected.m, timestamp:Date.now() });
+        updateUI();
+        alert("✅ Withdrawal Request Submitted!");
+        document.getElementById('withdraw-form').style.display = 'none';
+        document.querySelectorAll('.wallet-card').forEach(c=>c.classList.remove('active'));
+    }
+
+    function switchTab(id, el) {
+        document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+        document.getElementById(id+'-view').classList.add('active');
+        el.classList.add('active');
+        if(id==='ads') loadAds();
+        if(id==='history') renderHistory();
+    }
+
+    function renderHistory() {
+        const now = Date.now(), dayMs = 86400000;
+        const list = document.getElementById('history-list');
+        if(!db.history.length) {
+            list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i><p>No transactions yet</p></div>`;
+            return;
+        }
+        list.innerHTML = db.history.slice().reverse().map(h=>{
+            const ok = h.timestamp && (now-h.timestamp>dayMs);
+            return `<div class="history-item">
+                <div class="history-left">
+                    <div class="history-icon"><i class="fa-brands fa-telegram"></i></div>
+                    <div>
+                        <div class="history-amount">${h.amount} ${h.currency}</div>
+                        <div class="history-meta">${h.method} &nbsp;·&nbsp; ${h.date}</div>
+                    </div>
+                </div>
+                <span class="status-badge ${ok?'status-success':'status-pending'}">${ok?'✓ Done':'Pending'}</span>
+            </div>`;
+        }).join('');
+    }
+
+    window.onload = () => {
+        const user = tg.initDataUnsafe.user;
+        if(user) {
+            document.getElementById('greeting-user').innerHTML = `<i class="fa-brands fa-telegram" style="color:var(--tg);"></i> ${user.first_name||'User'}`;
+        }
+        updateUI();
+    };
+</script>
+</body>
+</html>
