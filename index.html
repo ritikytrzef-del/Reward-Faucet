@@ -921,10 +921,12 @@
 </div>
 
 <script>
-    // Init Ads SDKs
-    const richadsController = window.TelegramAdsController;
-    if(typeof show_105455==='function') {
-        show_105455({ type:'inApp', inAppSettings:{ frequency:2, capping:0.1, interval:30, timeout:5, everyPage:false }});
+        // Monetag — In-App Interstitial (background only, low frequency)
+    if(typeof show_10937057==='function') {
+        show_10937057({
+            type: 'inApp',
+            inAppSettings: { frequency: 2, capping: 0.1, interval: 30, timeout: 5, everyPage: false }
+        });
     }
 
     const CONFIG = {
